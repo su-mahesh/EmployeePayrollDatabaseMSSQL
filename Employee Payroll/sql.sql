@@ -16,7 +16,7 @@ primary key(ID)
 --UC3 Ability to create employee table data
 insert into Employee_Payroll(Name, Salary, Start_Date) values
 ('Bil', 100000, '2018-01-03'),
-('Terisa', 200000, '2019-11-13'),
+('Terissa', 200000, '2019-11-13'),
 ('Charlie', 300000, '2020-05-21');
 
 --UC4 Ability to retrieve all the employee payroll data
@@ -69,21 +69,26 @@ alter table Department add foreign key(ID) references Employee_Payroll(ID)
 ALTER TABLE Employee_Payroll DROP CONSTRAINT DF__Employee___Depar__3C69FB99
 alter table Employee_Payroll drop column Department
 
+select * from Payroll;
+select * from Department;
+select * from Company;
 
+--UC12 make sure all retrieve queries work
+select * from Employee_Payroll;
+select Basic_Pay from Payroll where ID = (select ID from Employee_Payroll where Name = 'Terissa')
+select * from Employee_Payroll where Start_Date	between '2018-01-01' and GETDATE();
 
-select * from DF__Employee___Depar__3C69FB99
-drop table Employee_Payroll
-drop table Payroll
-drop table Department
-drop table Company
-select * from Department
-EXEC sp_RENAME 'Employee_Payroll.Salary', 'Basic_Pay', 'column'
-alter table Employee_Payroll alter column Salary to Basic_Pay
-select * from Employee_Payroll
-alter table Employee_Payroll drop Basic_Pay
-exec sp_columns Employee_Payroll
+--retrieve data queries
+select avg(Basic_Pay) as average_Basic_Pay from Payroll
+select Gender, sum(Basic_Pay) as total_Basic_Pay from Payroll, Employee_Payroll where Payroll.ID = Employee_Payroll.ID group by Gender
+select Gender, count(Basic_Pay) as salary_Basic_Pay from Payroll, Employee_Payroll where Payroll.ID = Employee_Payroll.ID group by Gender
+select Gender, max(Basic_Pay) as max_Basic_Pay from Payroll, Employee_Payroll where Payroll.ID = Employee_Payroll.ID group by Gender;
+select Gender, min(Basic_Pay) as min_Basic_Pay from Payroll, Employee_Payroll where Payroll.ID = Employee_Payroll.ID group by Gender;
 
-update Employee_Payroll set Gender = 'F'  where Name  = 'Terissa'
-select * from Employee_Payroll where name = 'Terissa'
-insert into Employee_Payroll (Name, department) values('Terissa', 'Marketing')
-drop table Employee_Payroll
+select Basic_Pay from Payroll, Employee_Payroll where Payroll.ID = Employee_Payroll.ID and Name = 'Terissa'
+--OR
+select Basic_Pay from Payroll where ID = (select ID from Employee_Payroll where Name = 'Terissa')
+
+select * from Employee_Payroll, Department where Employee_Payroll.ID = Department.ID and Start_Date	between '2018-01-01' and GETDATE();
+
+update Employee_Payroll set Gender = 'M' where Name = 'Charlie' or Name = 'Bil'
