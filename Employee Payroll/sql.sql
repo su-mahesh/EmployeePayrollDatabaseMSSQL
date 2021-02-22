@@ -4,91 +4,130 @@ SELECT name, database_id, create_date FROM sys.databases ;
 use EmployeePayroll;
 
 --UC2 Ability to create employee table
-create Table Employee_Payroll
+create Table Employee
 (
-ID			int	identity(1, 1),
-Name		varchar(255) NOT Null,
+EmpID		int	identity(1, 1),
+EmpName		varchar(255) NOT Null,
 Salary		Money,
-Start_Date	Date,
-primary key(ID)
+StartDate	Date,
+constraint Employee_Primary_Key_EmpID primary key(EmpID)
 )
 
 --UC3 Ability to create employee table data
-insert into Employee_Payroll(Name, Salary, Start_Date) values
+insert into Employee(EmpName, Salary, StartDate) values
 ('Bil', 100000, '2018-01-03'),
 ('Terissa', 200000, '2019-11-13'),
 ('Charlie', 300000, '2020-05-21');
 
 --UC4 Ability to retrieve all the employee payroll data
-select * from Employee_Payroll
+select * from Employee
 
 --UC5 Ability to retrieve salary data for particular employee
 -- as well employees who joined in particular data range
-select salary from Employee_Payroll where Name = 'Terissa';
-select * from Employee_Payroll where Start_Date	between '2018-01-01' and GETDATE();
+select Salary from Employee where EmpName = 'Terissa';
+select * from Employee where StartDate	between '2018-01-01' and GETDATE();
 
 --UC6 Ability to add gender to employee payroll table
-alter table Employee_Payroll add Gender char(1)
-update Employee_Payroll set Gender = 'M' where Name = 'Charlie' or Name = 'Bil'
-update Employee_Payroll set Gender = 'F' where Gender IS null
---UC7 Ability to find sum avg min max and number of male female employee
-select sum(salary) as total_salary from Employee_Payroll
-select avg(salary) as average_salary from Employee_Payroll
-select min(salary) as min_salary from Employee_Payroll
-select max(salary) as max_salary from Employee_Payroll
-select count(salary) as salary_count from Employee_Payroll
+alter table Employee add Gender char(1);
+update Employee set Gender = 'M' where EmpName = 'Charlie' or EmpName = 'Bil';
+update Employee set Gender = 'F' where Gender IS null;
 
-select Gender, sum(salary) as total_salary from Employee_Payroll group by Gender
-select Gender, count(salary) as salary_count from Employee_Payroll group by Gender
-select Gender, max(salary) as max_salary from Employee_Payroll group by Gender;
+--UC7 Ability to find sum avg min max and number of male female employee
+select sum(Salary) as total_salary from Employee
+select avg(Salary) as average_salary from Employee
+select min(Salary) as min_salary from Employee
+select max(Salary) as max_salary from Employee
+select count(Salary) as salary_count from Employee
+
+select Gender, sum(salary) as total_salary from Employee group by Gender;
+select Gender, count(salary) as salary_count from Employee group by Gender;
+select Gender, max(salary) as max_salary from Employee group by Gender;
 
 --UC8 Ability to extend Employee_Payroll to store phone number, address, department
-alter table Employee_Payroll add Phone_number bigint, Address varchar(255) default('pune'), Department varchar(255) not null default('empty')
+alter table Employee add PhoneNumber bigint, Address varchar(255) default('empty'), Department varchar(255);
 
 --UC9 Ability to extend Employee_Payroll to store Basic Pay, Deductions, Taxable Pay, Income Tax, Net Pay
-alter table Employee_Payroll add Deduction int, Taxable_Pay int, Income_Tax int, Net_Pay int
-EXEC sp_RENAME 'Employee_Payroll.Salary', 'Basic_Pay', 'column'
+alter table Employee add Deduction money, TaxablePay money, IncomeTax money, NetPay money
 
 --UC10 Ability to make terissa as part of sales and marketing department 
-update Employee_Payroll set Department = 'sales'  where Name  = 'Terissa'
-insert into Employee_Payroll(Name, Department) values('Terissa', 'marketing')
+update Employee set Department = 'sales'  where EmpName  = 'Terissa';
+insert into Employee(EmpName, Department) values('Terissa', 'marketing')
 
 --UC11 Ability to implement er diagram 
 -- normalize database
-select ID, Basic_Pay, Deduction, Taxable_Pay, Income_Tax, Net_Pay into Payroll from Employee_Payroll
-select * from Payroll
-alter table Payroll add foreign key(ID) references Employee_Payroll(ID)
-alter table Employee_Payroll drop column Basic_Pay, Deduction, Taxable_Pay, Income_Tax, Net_Pay;
+exec sp_rename 'Employee.Salary', 'BasicPay', 'COLUMN';
+create Table Payroll
+(
+EmpID		int,
+BasicPay	Money,
+Deduction	Money,
+TaxablePay	Money,
+IncomeTax	Money,
+NetPay		Money
+constraint Payroll_foreign_Key_EmpID foreign key(EmpID) references Employee(EmpID) on delete cascade
+)
+insert into Payroll select EmpID, BasicPay, Deduction, TaxablePay, IncomeTax, NetPay from Employee;
 
-select ID into Company from Employee_Payroll
+select * from Employee;
+select * from Payroll;
+
+alter table Employee drop column BasicPay, Deduction, TaxablePay, IncomeTax, NetPay;
+
+create Table Company
+(
+EmpID	int,
+EmpName	varchar(255),
+constraint Company_foreign_Key_EmpID foreign key(EmpID) references Employee(EmpID) on delete cascade
+)
+insert into Company select EmpID, EmpName from Employee;
+
 select * from Company
 
-select ID, Department into Department from Employee_Payroll
-alter table Department add foreign key(ID) references Employee_Payroll(ID)
+create Table Department
+(
+EmpID		int,
+Department	varchar(255),
+constraint Department_foreign_Key_EmpID foreign key(EmpID) references Employee(EmpID) on delete cascade
+)
+insert into Department select EmpID, Department from Employee;
 
-ALTER TABLE Employee_Payroll DROP CONSTRAINT DF__Employee___Depar__3C69FB99
-alter table Employee_Payroll drop column Department
+select * from Department;
 
+ALTER TABLE Employee drop column Department
+ 
 select * from Payroll;
 select * from Department;
 select * from Company;
 
 --UC12 make sure all retrieve queries work
-select * from Employee_Payroll;
-select Basic_Pay from Payroll where ID = (select ID from Employee_Payroll where Name = 'Terissa')
-select * from Employee_Payroll where Start_Date	between '2018-01-01' and GETDATE();
+select * from Employee;
+select * from Payroll;
+delete from Employee where Address = 'empty';
+
+select BasicPay from Payroll where EmpID = (select EmpID from Employee where EmpName = 'Terissa');
+
+select * from Employee where StartDate	between '2018-01-01' and GETDATE();
 
 --retrieve data queries
-select avg(Basic_Pay) as average_Basic_Pay from Payroll
-select Gender, sum(Basic_Pay) as total_Basic_Pay from Payroll, Employee_Payroll where Payroll.ID = Employee_Payroll.ID group by Gender
-select Gender, count(Basic_Pay) as salary_Basic_Pay from Payroll, Employee_Payroll where Payroll.ID = Employee_Payroll.ID group by Gender
-select Gender, max(Basic_Pay) as max_Basic_Pay from Payroll, Employee_Payroll where Payroll.ID = Employee_Payroll.ID group by Gender;
-select Gender, min(Basic_Pay) as min_Basic_Pay from Payroll, Employee_Payroll where Payroll.ID = Employee_Payroll.ID group by Gender;
+select avg(BasicPay) as average_Basic_Pay from Payroll
+select Gender, sum(BasicPay) as total_Basic_Pay from Payroll, Employee where Payroll.EmpID = Employee.EmpID group by Gender
+select Gender, count(BasicPay) as salary_Basic_Pay from Payroll, Employee where Payroll.EmpID = Employee.EmpID group by Gender
+select Gender, max(BasicPay) as max_Basic_Pay from Payroll, Employee where Payroll.EmpID = Employee.EmpID group by Gender;
+select Gender, min(BasicPay) as min_Basic_Pay from Payroll, Employee where Payroll.EmpID = Employee.EmpID group by Gender;
 
-select Basic_Pay from Payroll, Employee_Payroll where Payroll.ID = Employee_Payroll.ID and Name = 'Terissa'
+select BasicPay from Payroll, Employee where Payroll.EmpID = Employee.EmpID and EmpName = 'Terissa'
 --OR
-select Basic_Pay from Payroll where ID = (select ID from Employee_Payroll where Name = 'Terissa')
+select BasicPay from Payroll where EmpID = (select EmpID from Employee where EmpName = 'Terissa')
 
 select * from Employee_Payroll, Department where Employee_Payroll.ID = Department.ID and Start_Date	between '2018-01-01' and GETDATE();
 
-update Employee_Payroll set Gender = 'M' where Name = 'Charlie' or Name = 'Bil'
+update Employee set Gender = 'M' where EmpName = 'Charlie' or EmpName = 'Bil'
+
+
+SELECT Employee.EmpID, EmpName, PhoneNumber, Address, Department, Gender, BasicPay, Deduction,
+                                    TaxablePay, IncomeTax, NetPay, StartDate
+                                    from Employee, Payroll, Department where Employee.EmpID = Payroll.EmpID and Employee.EmpID = Department.EmpID;
+
+SELECT * from Department
+
+UPDATE Payroll SET NetPay = 70000
