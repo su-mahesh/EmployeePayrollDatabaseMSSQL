@@ -91,7 +91,25 @@ constraint Department_foreign_Key_EmpID foreign key(EmpID) references Employee(E
 )
 insert into Department select EmpID, Department from Employee;
 
+create Table Department
+(
+DeptID		int identity(1, 1),
+DepartmentName	varchar(255),
+constraint Department_primaryKey_DeptID primary key(DeptID)
+)
+INSERT INTO Department(DepartmentName) values('sales'), ('marketing');
+INSERT INTO Department(DepartmentName) values('production'), ('IT');
 select * from Department;
+
+create Table EmpDepartment
+(
+EmpID	int,
+DeptID	int,
+constraint EmpDepartment_ForeignKey_EmpID foreign key(EmpID) references Employee(EmpID) on delete cascade,
+constraint EmpDepartment_ForeignKey_DeptID foreign key(DeptID) references Department(DeptID) on delete cascade
+)
+
+select * from EmpDepartment;
 
 ALTER TABLE Employee drop column Department
  
@@ -105,8 +123,17 @@ select * from Payroll;
 delete from Employee where Address = 'empty';
 
 select BasicPay from Payroll where EmpID = (select EmpID from Employee where EmpName = 'Terissa');
-
 select * from Employee where StartDate	between '2018-01-01' and GETDATE();
+INSERT INTO EmpDepartment(EmpID, DeptID) select Employee.EmpID, DeptID FROM Employee, Department WHERE Employee.EmpName = 'Terissa' 
+AND Department.DepartmentName = 'sales';
+INSERT INTO EmpDepartment(EmpID, DeptID) select Employee.EmpID, DeptID FROM Employee, Department WHERE Employee.EmpName = 'Terissa' 
+AND Department.DepartmentName = 'marketing';
+INSERT INTO EmpDepartment(EmpID, DeptID) select Employee.EmpID, DeptID FROM Employee, Department WHERE Employee.EmpName = 'Bil' 
+AND Department.DepartmentName = 'IT';
+INSERT INTO EmpDepartment(EmpID, DeptID) select Employee.EmpID, DeptID FROM Employee, Department WHERE Employee.EmpName = 'Charlie' 
+AND Department.DepartmentName = 'production';
+
+SELECT * FROM EmpDepartment;
 
 --retrieve data queries
 select avg(BasicPay) as average_Basic_Pay from Payroll
@@ -119,15 +146,27 @@ select BasicPay from Payroll, Employee where Payroll.EmpID = Employee.EmpID and 
 --OR
 select BasicPay from Payroll where EmpID = (select EmpID from Employee where EmpName = 'Terissa')
 
-select * from Employee_Payroll, Department where Employee_Payroll.ID = Department.ID and Start_Date	between '2018-01-01' and GETDATE();
+select * from Employee, EmpDepartment where Employee.EmpID = EmpDepartment.EmpID and StartDate between '2018-01-01' and GETDATE();
 
-update Employee set Gender = 'M' where EmpName = 'Charlie' or EmpName = 'Bil'
+SELECT * from Employee;
+SELECT * from EmpDepartment;
+SELECT * from Department;
 
+UPDATE Employee set Gender = 'M' where EmpName = 'Charlie' or EmpName = 'Bil';
+UPDATE Payroll SET NetPay = 70000;
 
-SELECT Employee.EmpID, EmpName, PhoneNumber, Address, Department, Gender, BasicPay, Deduction,
+delete from EmpDepartment where EmpID = 1;
+SELECT Employee.EmpID, EmpName, PhoneNumber, Address, DepartmentName, Gender, BasicPay, Deduction,
                                     TaxablePay, IncomeTax, NetPay, StartDate
-                                    from Employee, Payroll, Department where Employee.EmpID = Payroll.EmpID and Employee.EmpID = Department.EmpID;
+                                    from Employee, Payroll, Department, EmpDepartment where Employee.EmpID = Payroll.EmpID and 
+									EmpDepartment.DeptID = Department.DeptID and Employee.EmpID = EmpDepartment.EmpID;
 
-SELECT * from Department
+SELECT * from Employee;
 
-UPDATE Payroll SET NetPay = 70000
+drop table Employee;
+drop table Department;
+drop table Company;
+drop table Payroll;
+
+
+
