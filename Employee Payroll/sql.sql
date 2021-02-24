@@ -156,10 +156,17 @@ UPDATE Employee set Gender = 'M' where EmpName = 'Charlie' or EmpName = 'Bil';
 UPDATE Payroll SET NetPay = 70000;
 
 delete from EmpDepartment where EmpID = 1;
+
 SELECT Employee.EmpID, EmpName, PhoneNumber, Address, DepartmentName, Gender, BasicPay, Deduction,
                                     TaxablePay, IncomeTax, NetPay, StartDate
                                     from Employee, Payroll, Department, EmpDepartment where Employee.EmpID = Payroll.EmpID and 
 									EmpDepartment.DeptID = Department.DeptID and Employee.EmpID = EmpDepartment.EmpID;
+-- join all tables and get all data
+select Employee.EmpID, EmpName, PhoneNumber, Address, DepartmentName, Gender, BasicPay, Deduction,
+TaxablePay, IncomeTax, NetPay, StartDate 
+from Employee left join EmpDepartment on Employee.EmpID = EmpDepartment.EmpID
+left join Department on EmpDepartment.DeptID = Department.DeptID
+left join Payroll on Employee.EmpID = Payroll.EmpID;
 
 SELECT * from Employee;
 
@@ -168,5 +175,5 @@ drop table Department;
 drop table Company;
 drop table Payroll;
 
-
+EXEC GetAllEmployeeData;
 
