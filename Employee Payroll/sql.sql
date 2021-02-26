@@ -161,6 +161,7 @@ SELECT Employee.EmpID, EmpName, PhoneNumber, Address, DepartmentName, Gender, Ba
                                     TaxablePay, IncomeTax, NetPay, StartDate
                                     from Employee, Payroll, Department, EmpDepartment where Employee.EmpID = Payroll.EmpID and 
 									EmpDepartment.DeptID = Department.DeptID and Employee.EmpID = EmpDepartment.EmpID;
+
 -- join all tables and get all data
 select Employee.EmpID, EmpName, PhoneNumber, Address, DepartmentName, Gender, BasicPay, Deduction,
 TaxablePay, IncomeTax, NetPay, StartDate 
@@ -170,10 +171,27 @@ left join Payroll on Employee.EmpID = Payroll.EmpID;
 
 SELECT * from Employee;
 
-drop table Employee;
-drop table Department;
-drop table Company;
-drop table Payroll;
-
 EXEC GetAllEmployeeData;
 
+
+--Day 27
+--UC8 Ability to also add to payroll details when a
+--new Employee is added to the Payroll
+
+
+SELECT * from Employee;
+select * from Payroll; 
+
+alter table Payroll add Deduction as BasicPay * 20 / 100;
+
+alter table Payroll drop column Taxablepay
+
+alter table Payroll add TaxablePay as Basicpay - (BasicPay * 20 / 100);
+
+alter table Payroll drop column IncomeTax
+
+alter table Payroll add IncomeTax as  ((Basicpay - (BasicPay * 20 / 100)) * 10 / 100);
+
+alter table Payroll drop column NetPay
+
+alter table Payroll add NetPay as BasicPay - ((Basicpay - (BasicPay * 20 / 100)) * 10 / 100);
